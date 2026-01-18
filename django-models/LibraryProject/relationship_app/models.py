@@ -3,9 +3,10 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-# --- Original Models (Tasks 1 & 2) ---
+# Task 1 Models
 class Author(models.Model):
     name = models.CharField(max_length=100)
+
     def __str__(self):
         return self.name
 
@@ -14,7 +15,7 @@ class Book(models.Model):
     author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='books')
 
     class Meta:
-        # Custom Permissions (Task 5)
+        # Task 5: Custom Permissions
         permissions = [
             ("can_add_book", "Can add book"),
             ("can_change_book", "Can change book"),
@@ -24,19 +25,22 @@ class Book(models.Model):
     def __str__(self):
         return self.title
 
+# Task 2 Models
 class Library(models.Model):
     name = models.CharField(max_length=100)
     books = models.ManyToManyField(Book, related_name='libraries')
+
     def __str__(self):
         return self.name
 
 class Librarian(models.Model):
     name = models.CharField(max_length=100)
     library = models.OneToOneField(Library, on_delete=models.CASCADE, related_name='librarian')
+
     def __str__(self):
         return self.name
 
-# --- Role-Based Profile (Task 4) ---
+# Task 4 Models
 class UserProfile(models.Model):
     ROLE_CHOICES = [
         ('Admin', 'Admin'),
@@ -49,7 +53,7 @@ class UserProfile(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.role}"
 
-# --- Signals to auto-create UserProfile ---
+# Signals for UserProfile
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
