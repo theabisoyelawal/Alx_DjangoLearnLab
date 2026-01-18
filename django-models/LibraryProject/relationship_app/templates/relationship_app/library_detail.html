@@ -1,0 +1,7 @@
+<h1>Library: {{ library.name }}</h1>
+<h3>Books available:</h3>
+<ul>
+    {% for book in library.books.all %}
+        <li>{{ book.title }}</li>
+    {% endfor %}
+</ul>
