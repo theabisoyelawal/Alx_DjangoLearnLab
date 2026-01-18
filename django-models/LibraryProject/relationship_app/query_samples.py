@@ -1,23 +1,60 @@
-from relationship_app.models import Author, Book, Library, Librarian
+from django.db import models
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
-# 1. Query all books by a specific author
-def get_books_by_author(author_name):
-    # First, find the author by name
-    author = Author.objects.get(name=author_name)
-    # Then, find all books where the author is this specific author
-    return Book.objects.filter(author=author)
+# --- Original Models ---
+class Author(models.Model):
+    name = models.CharField(max_length=100)
+    def __str__(self):
+        return self.name
 
-# 2. List all books in a library
-def get_books_in_library(library_name):
-    # First, find the library by name
-    library = Library.objects.get(name=library_name)
-    # Use the .all() method on the many-to-many relationship
-    return library.books.all()
+class Book(models.Model):
+    title = models.CharField(max_length=100)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='books')
 
-# 3. Retrieve the librarian for a library
-def get_librarian_for_library(library_name):
-    # First, find the library by name
-    library = Library.objects.get(name=library_name)
-    # Use the OneToOne relationship to get the librarian
-    # The 'librarian' attribute is available because it's a OneToOneField
-    return Librarian.objects.get(library=library)
+    class Meta:
+        # Step 1: Custom Permissions
+        permissions = [
+            ("can_add_book", "Can add book"),
+            ("can_change_book", "Can change book"),
+            ("can_delete_book", "Can delete book"),
+        ]
+
+    def __str__(self):
+        return self.title
+
+class Library(models.Model):
+    name = models.CharField(max_length=100)
+    books = models.ManyToManyField(Book, related_name='libraries')
+    def __str__(self):
+        return self.name
+
+class Librarian(models.Model):
+    name = models.CharField(max_length=100)
+    library = models.OneToOneField(Library, on_delete=models.CASCADE, related_name='librarian')
+    def __str__(self):
+        return self.name
+
+# --- Role-Based Profile ---
+class UserProfile(models.Model):
+    ROLE_CHOICES = [
+        ('Admin', 'Admin'),
+        ('Librarian', 'Librarian'),
+        ('Member', 'Member'),
+    ]
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.role}"
+
+# --- Signals to auto-create UserProfile ---
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.userprofile.save()
