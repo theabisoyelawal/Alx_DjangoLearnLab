@@ -5,18 +5,18 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import user_passes_test, permission_required
 from .models import Book, Library
 
-# Task 1: Function-based view (Checker looks for Book.objects.all())
+# Task 1: Function-based view
 def list_books(request):
     books = Book.objects.all()
     return render(request, 'relationship_app/list_books.html', {'books': books})
 
-# Task 2: Class-based view (Checker looks for DetailView and Library model)
+# Task 2: Class-based view
 class LibraryDetailView(DetailView):
     model = Library
     template_name = 'relationship_app/library_detail.html'
     context_object_name = 'library'
 
-# Task 3: User Authentication
+# Task 3: Registration
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
