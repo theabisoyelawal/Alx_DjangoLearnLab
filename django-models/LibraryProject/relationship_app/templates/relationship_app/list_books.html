@@ -1,6 +1,6 @@
-<h1>Books List</h1>
+<h1>Books Available:</h1>
 <ul>
-    {% for book in book_list %}
-        <li>{{ book.title }} by {{ book.author.name }}</li>
+    {% for book in books %}
+    <li>{{ book.title }} by {{ book.author.name }}</li>
     {% endfor %}
 </ul>
