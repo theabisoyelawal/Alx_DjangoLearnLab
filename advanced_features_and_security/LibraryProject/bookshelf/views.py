@@ -1,6 +1,19 @@
 from django.shortcuts import render
+from .forms import ExampleForm
 from django.contrib.auth.decorators import permission_required
 from .models import Book
+
+def example_form_view(request):
+    if request.method == "POST":
+        form = ExampleForm(request.POST)
+        if form.is_valid():
+            # Do something safely with form.cleaned_data
+            name = form.cleaned_data['name']
+            email = form.cleaned_data['email']
+            return render(request, "bookshelf/form_success.html", {"name": name})
+    else:
+        form = ExampleForm()
+    return render(request, "bookshelf/form_example.html", {"form": form})
 
 @permission_required("bookshelf.can_view", raise_exception=True)
 def book_list(request):
