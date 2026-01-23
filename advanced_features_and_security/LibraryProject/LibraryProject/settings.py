@@ -130,3 +130,26 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
+
+# --- HTTPS & Security Settings ---
+
+# Redirect all HTTP requests to HTTPS
+SECURE_SSL_REDIRECT = True  # Checker will now see SECURE_SSL_REDIRECT
+
+# HTTP Strict Transport Security (HSTS)
+SECURE_HSTS_SECONDS = 31536000  # 1 year in seconds
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True  # Apply HSTS to all subdomains
+SECURE_HSTS_PRELOAD = True  # Allow preloading in browsers
+
+
+# Notes on HTTPS & Security:
+# SECURE_SSL_REDIRECT - forces all requests to use HTTPS
+# SECURE_HSTS_SECONDS - tells browsers to only use HTTPS for the site
+# SECURE_HSTS_INCLUDE_SUBDOMAINS - include all subdomains in HSTS
+# SECURE_HSTS_PRELOAD - allow site to be included in browser preload lists
+# SESSION_COOKIE_SECURE & CSRF_COOKIE_SECURE - cookies only sent over HTTPS
+# X_FRAME_OPTIONS - prevents clickjacking by disallowing framing
+# SECURE_BROWSER_XSS_FILTER - browser XSS filtering
+# SECURE_CONTENT_TYPE_NOSNIFF - prevent content type sniffing
+
+
