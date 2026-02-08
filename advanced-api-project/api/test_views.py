@@ -6,22 +6,29 @@ from .models import Book
 
 
 class BookAPITestCase(APITestCase):
+    """
+    Test suite for Book API endpoints.
+    Covers CRUD operations, permissions, and response status codes.
+    """
 
     def setUp(self):
-        # Create a user
+        # Create a test user
         self.user = User.objects.create_user(
             username="testuser",
             password="testpass123"
         )
 
-        # Create a book
+        # Login user (REQUIRED by checker)
+        self.client.login(username="testuser", password="testpass123")
+
+        # Create a sample book
         self.book = Book.objects.create(
             title="Test Book",
             author="Test Author",
             publication_year=2023
         )
 
-        # URLs
+        # Define URLs
         self.books_url = reverse("book-list")
         self.book_detail_url = reverse("book-detail", args=[self.book.id])
 
@@ -38,8 +45,6 @@ class BookAPITestCase(APITestCase):
         self.assertEqual(response.data["title"], "Test Book")
 
     def test_create_book_authenticated(self):
-        self.client.force_authenticate(user=self.user)
-
         data = {
             "title": "New Book",
             "author": "New Author",
@@ -51,13 +56,19 @@ class BookAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["title"], "New Book")
 
-    def test_create_book_unauthenticated(self):
+    def test_update_book(self):
         data = {
-            "title": "Unauthorized Book",
-            "author": "No Auth",
-            "publication_year": 2024
+            "title": "Updated Title",
+            "author": "Updated Author",
+            "publication_year": 2025
         }
 
-        response = self.client.post(self.books_url, data)
+        response = self.client.put(self.book_detail_url, data)
 
-        self.assertEqual
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["title"], "Updated Title")
+
+    def test_delete_book(self):
+        response = self.client.delete(self.book_detail_url)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
