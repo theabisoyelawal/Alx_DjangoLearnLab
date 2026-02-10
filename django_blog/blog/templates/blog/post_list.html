@@ -1,20 +1,9 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Posts</title>
-</head>
-<body>
-    <h1>All Blog Posts</h1>
-
-    {% for post in posts %}
-        <h2>
-            <a href="{% url 'post-detail' post.pk %}">
-                {{ post.title }}
-            </a>
-        </h2>
-        <p>{{ post.content|truncatewords:20 }}</p>
-    {% empty %}
-        <p>No posts available.</p>
-    {% endfor %}
-</body>
-</html>
+<!-- blog/templates/blog/post_list.html -->
+<h1>Blog Posts</h1>
+<ul>
+  {% for post in posts %}
+    <li>{{ post.title }}</li>
+  {% empty %}
+    <li>No posts yet.</li>
+  {% endfor %}
+</ul>

@@ -1,52 +1,7 @@
-from django.contrib.auth.decorators import login_required
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.urls import reverse_lazy
-from .models import Post
-
-
-
+from django.views.generic import ListView
+from .models import Post  # Make sure you have a Post model in models.py
 
 class PostListView(ListView):
     model = Post
-    template_name = 'blog/post_list.html'
-
-
-class PostDetailView(DetailView):
-    model = Post
-    template_name = 'blog/post_detail.html'
-
-
-class PostCreateView(LoginRequiredMixin, CreateView):
-    model = Post
-    fields = ['title', 'content']
-    template_name = 'blog/post_form.html'
-
-    def form_valid(self, form):
-        form.instance.author = self.request.user
-        return super().form_valid(form)
-
-
-class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    model = Post
-    fields = ['title', 'content']
-    template_name = 'blog/post_form.html'
-
-    def test_func(self):
-        post = self.get_object()
-        return self.request.user == post.author
-
-
-class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    model = Post
-    template_name = 'blog/post_confirm_delete.html'
-    success_url = reverse_lazy('post-list')
-
-    def test_func(self):
-        post = self.get_object()
-        return self.request.user == post.author
-
-@login_required
-def checker_login_required_view(request):
-    pass
-
+    template_name = 'blog/post_list.html'  # Make sure this template exists
+    context_object_name = 'posts'          # Used in the template as {{ posts }}
