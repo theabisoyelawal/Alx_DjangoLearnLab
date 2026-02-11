@@ -1,14 +1,25 @@
+# blog/urls.py
+
 from django.urls import path
-from . import views
+from .views import (
+    PostListView, PostDetailView, PostCreateView, PostUpdateView, PostDeleteView,
+    CommentCreateView, CommentUpdateView, CommentDeleteView,
+    search_posts, posts_by_tag
+)
 
 urlpatterns = [
-    path('', views.PostListView.as_view(), name='blog-home'),
-    path('search/', views.search_posts, name='post-search'),
-    path('tags/<str:tag_name>/', views.posts_by_tag, name='posts-by-tag'),
-    # Existing CRUD URLs here
-    # Example:
-    # path('post/<int:pk>/', views.PostDetailView.as_view(), name='post-detail'),
-    # path('post/new/', views.PostCreateView.as_view(), name='post-create'),
-    # path('post/<int:pk>/update/', views.PostUpdateView.as_view(), name='post-update'),
-    # path('post/<int:pk>/delete/', views.PostDeleteView.as_view(), name='post-delete'),
+    path('', PostListView.as_view(), name='blog-home'),
+    path('post/<int:pk>/', PostDetailView.as_view(), name='post-detail'),
+    path('post/new/', PostCreateView.as_view(), name='post-create'),
+    path('post/<int:pk>/update/', PostUpdateView.as_view(), name='post-update'),
+    path('post/<int:pk>/delete/', PostDeleteView.as_view(), name='post-delete'),
+
+    # Comments
+    path('post/<int:pk>/comments/new/', CommentCreateView.as_view(), name='comment-create'),
+    path('comment/<int:pk>/update/', CommentUpdateView.as_view(), name='comment-update'),
+    path('comment/<int:pk>/delete/', CommentDeleteView.as_view(), name='comment-delete'),
+
+    # Tagging & Search
+    path('tags/<str:tag_name>/', posts_by_tag, name='posts-by-tag'),
+    path('search/', search_posts, name='post-search'),
 ]

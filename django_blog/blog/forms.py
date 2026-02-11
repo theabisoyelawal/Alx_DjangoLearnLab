@@ -1,3 +1,5 @@
+# blog/forms.py
+
 from django import forms
 from .models import Post, Comment
 from taggit.forms import TagWidget
@@ -7,7 +9,7 @@ class PostForm(forms.ModelForm):
         model = Post
         fields = ['title', 'content', 'tags']
         widgets = {
-            'tags': TagWidget(attrs={'class': 'form-control'}),
+            'tags': TagWidget(),  # ensures tags appear in the form
         }
 
 class CommentForm(forms.ModelForm):
