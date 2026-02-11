@@ -1,31 +1,14 @@
 from django.urls import path
-from .views import (
-    PostListView, PostDetailView, PostCreateView, PostUpdateView, PostDeleteView,
-    CommentCreateView, CommentUpdateView, CommentDeleteView,
-    register, profile
-)
+from . import views
 
 urlpatterns = [
-    # -------------------
-    # Authentication URLs
-    # -------------------
-    path('register/', register, name='register'),
-    path('profile/', profile, name='profile'),
-
-    # -------------------
-    # Post CRUD URLs
-    # -------------------
-    path('', PostListView.as_view(), name='post-list'),
-    path('post/<int:pk>/', PostDetailView.as_view(), name='post-detail'),
-    path('post/new/', PostCreateView.as_view(), name='post-create'),
-    path('post/<int:pk>/update/', PostUpdateView.as_view(), name='post-update'),
-    path('post/<int:pk>/delete/', PostDeleteView.as_view(), name='post-delete'),
-
-    # -------------------
-    # Comment CRUD URLs
-    # Correct paths for ALX checks
-    # -------------------
-    path('post/<int:pk>/comments/new/', CommentCreateView.as_view(), name='comment-create'),
-    path('comment/<int:pk>/update/', CommentUpdateView.as_view(), name='comment-update'),
-    path('comment/<int:pk>/delete/', CommentDeleteView.as_view(), name='comment-delete'),
+    path('', views.PostListView.as_view(), name='blog-home'),
+    path('search/', views.search_posts, name='post-search'),
+    path('tags/<str:tag_name>/', views.posts_by_tag, name='posts-by-tag'),
+    # Existing CRUD URLs here
+    # Example:
+    # path('post/<int:pk>/', views.PostDetailView.as_view(), name='post-detail'),
+    # path('post/new/', views.PostCreateView.as_view(), name='post-create'),
+    # path('post/<int:pk>/update/', views.PostUpdateView.as_view(), name='post-update'),
+    # path('post/<int:pk>/delete/', views.PostDeleteView.as_view(), name='post-delete'),
 ]
