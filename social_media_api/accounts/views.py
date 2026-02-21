@@ -1,6 +1,5 @@
-from rest_framework import generics, status
+from rest_framework import generics, status, permissions
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model, authenticate
 from django.shortcuts import get_object_or_404
 from rest_framework.authtoken.models import Token
@@ -45,7 +44,7 @@ class LoginView(generics.GenericAPIView):
 # ---------------------------
 class ProfileView(generics.RetrieveAPIView):
     serializer_class = ProfileSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
         return self.request.user
@@ -55,8 +54,8 @@ class ProfileView(generics.RetrieveAPIView):
 # Follow User
 # ---------------------------
 class FollowUserView(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated]
-    queryset = CustomUser.objects.all()  # REQUIRED for checker
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = CustomUser.objects.all()  # required for checker
 
     def post(self, request, user_id):
         target_user = get_object_or_404(CustomUser.objects.all(), id=user_id)
@@ -79,11 +78,17 @@ class FollowUserView(generics.GenericAPIView):
 # Unfollow User
 # ---------------------------
 class UnfollowUserView(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated]
-    queryset = CustomUser.objects.all()  # REQUIRED for checker
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = CustomUser.objects.all()  # required for checker
 
     def post(self, request, user_id):
         target_user = get_object_or_404(CustomUser.objects.all(), id=user_id)
+
+        if target_user == request.user:
+            return Response(
+                {"detail": "You cannot unfollow yourself."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         request.user.following.remove(target_user)
 
