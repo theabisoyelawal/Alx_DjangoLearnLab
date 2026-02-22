@@ -1,12 +1,63 @@
-from rest_framework import generics, status
+from rest_framework import viewsets, generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 
-from .models import Post, Like
+from .models import Post, Comment, Like
+from .serializers import PostSerializer, CommentSerializer
 from notifications.models import Notification
 
+User = get_user_model()
+
+# ---------------------------
+# Permissions
+# ---------------------------
+from rest_framework import permissions
+
+class IsOwnerOrReadOnly(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return obj.author == request.user
+
+# ---------------------------
+# Posts
+# ---------------------------
+class PostViewSet(viewsets.ModelViewSet):
+    queryset = Post.objects.all().order_by('-created_at')
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+# ---------------------------
+# Comments
+# ---------------------------
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all().order_by('-created_at')
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+# ---------------------------
+# Feed
+# ---------------------------
+class FeedView(generics.ListAPIView):
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        following_users = self.request.user.following.all()
+        return Post.objects.filter(author__in=following_users).order_by('-created_at')
+
+# ---------------------------
+# Like Post
+# ---------------------------
 class LikePostView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
@@ -27,6 +78,9 @@ class LikePostView(generics.GenericAPIView):
 
         return Response({"detail": "Post liked successfully."}, status=status.HTTP_201_CREATED)
 
+# ---------------------------
+# Unlike Post
+# ---------------------------
 class UnlikePostView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
