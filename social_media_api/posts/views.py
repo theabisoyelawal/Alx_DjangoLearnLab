@@ -1,6 +1,5 @@
 from rest_framework import viewsets, generics, status, permissions
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 
@@ -35,7 +34,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 
 # ---------------------------
-# FEED VIEW
+# FEED
 # ---------------------------
 class FeedView(generics.ListAPIView):
     serializer_class = PostSerializer
