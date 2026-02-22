@@ -2,6 +2,7 @@ from rest_framework import generics, permissions
 from .models import Post
 from .serializers import PostSerializer
 
+
 class FeedView(generics.ListAPIView):
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticated]
