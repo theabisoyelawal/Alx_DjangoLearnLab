@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import PostViewSet, CommentViewSet, FeedView, LikePostView, UnlikePostView
+from .views import FeedView, LikePostView, UnlikePostView
 
 urlpatterns = [
     path('feed/', FeedView.as_view(), name='feed'),
