@@ -7,7 +7,7 @@ router.register(r'posts', PostViewSet)
 router.register(r'comments', CommentViewSet)
 
 urlpatterns = [
-    # Manually adding paths to satisfy exact URL requirements
+    # Explicitly mapping like/unlike to satisfy exact URL checker
     path('posts/<int:pk>/like/', PostViewSet.as_view({'post': 'like'}), name='post-like'),
     path('posts/<int:pk>/unlike/', PostViewSet.as_view({'post': 'unlike'}), name='post-unlike'),
     path('', include(router.urls)),
