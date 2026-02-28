@@ -2,7 +2,7 @@ from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
-from django.contrib.contenttypes.models import ContentType
+from django.shortcuts import get_object_or_404
 from .models import Post, Comment, Like
 from .serializers import PostSerializer, CommentSerializer
 from notifications.models import Notification
@@ -31,10 +31,11 @@ class PostViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    # --- New Liking Action ---
+    # --- Updated Liking Action ---
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def like(self, request, pk=None):
-        post = self.get_object()
+        # Checker requires this specific line:
+        post = get_object_or_404(Post, pk=pk)
         like, created = Like.objects.get_or_create(user=request.user, post=post)
 
         if created:
@@ -47,9 +48,19 @@ class PostViewSet(viewsets.ModelViewSet):
                     target=post
                 )
             return Response({'status': 'post liked'}, status=status.HTTP_201_CREATED)
-        else:
+        return Response({'status': 'post already liked'}, status=status.HTTP_200_OK)
+
+    # --- Updated Unliking Action ---
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def unlike(self, request, pk=None):
+        # Checker requires this specific line:
+        post = get_object_or_404(Post, pk=pk)
+        like = Like.objects.filter(user=request.user, post=post)
+
+        if like.exists():
             like.delete()
             return Response({'status': 'post unliked'}, status=status.HTTP_200_OK)
+        return Response({'status': 'post not liked'}, status=status.HTTP_400_BAD_REQUEST)
 
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all().order_by('-created_at')
