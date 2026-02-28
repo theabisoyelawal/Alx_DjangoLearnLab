@@ -1,20 +1,20 @@
-# Python
+# Python bytecode
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
 
-# Django
-db.sqlite3
-media/
-
-# Virtual environments
+# Virtual environment
 venv/
 env/
+.env/
 
-# VS Code
+# Django local database
+db.sqlite3
+
+# Django media files
+media/
+
+# VS Code settings
 .vscode/
 
-# OS files
-.DS_Store
-Thumbs.db
+# IDE settings
+.idea/
