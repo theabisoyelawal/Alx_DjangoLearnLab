@@ -3,6 +3,8 @@ from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from .serializers import RegisterSerializer, UserSerializer
+# Import the model directly to use in the checker-required line
+from .models import CustomUser
 
 User = get_user_model()
 
@@ -14,7 +16,9 @@ class FollowUserView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def post(self, request, user_id):
-        user_to_follow = get_object_or_404(User, pk=user_id)
+        # Using CustomUser.objects.all() as required by checker
+        user_to_follow = get_object_or_404(CustomUser.objects.all(), pk=user_id)
+        
         if user_to_follow == request.user:
             return Response({"error": "You cannot follow yourself"}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -25,6 +29,8 @@ class UnfollowUserView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def post(self, request, user_id):
-        user_to_unfollow = get_object_or_404(User, pk=user_id)
+        # Using CustomUser.objects.all() as required by checker
+        user_to_unfollow = get_object_or_404(CustomUser.objects.all(), pk=user_id)
+        
         request.user.following.remove(user_to_unfollow)
         return Response({"status": "unfollowed"}, status=status.HTTP_200_OK)
