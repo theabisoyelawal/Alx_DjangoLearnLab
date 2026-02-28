@@ -1,10 +1,8 @@
 from django.urls import path
-from .views import RegisterView, LoginView
+from .views import RegisterView, FollowUserView, UnfollowUserView
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
-    path('login/', LoginView.as_view(), name='login'),
-    # Note: Profile management endpoint /profile usually requires 
-    # a detail view or a generic user profile endpoint not specified here.
-    # The checkers primarily focus on /register and /login.
+    path('follow/<int:user_id>/', FollowUserView.as_view(), name='follow-user'),
+    path('unfollow/<int:user_id>/', UnfollowUserView.as_view(), name='unfollow-user'),
 ]

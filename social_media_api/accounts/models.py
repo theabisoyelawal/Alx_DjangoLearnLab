@@ -2,8 +2,9 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 class CustomUser(AbstractUser):
-    bio = models.TextField(blank=True, default='') # Ensure default is set
+    bio = models.TextField(blank=True, default='')
     profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
+    # The M2M relationship for following
     followers = models.ManyToManyField(
         'self', 
         symmetrical=False, 

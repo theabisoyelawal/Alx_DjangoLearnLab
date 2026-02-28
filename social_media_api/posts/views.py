@@ -1,7 +1,8 @@
-from rest_framework import viewsets, permissions, filters, status, generics # Updated import
+from rest_framework import viewsets, permissions, filters, status, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
+from django.shortcuts import get_object_or_404
 from .models import Post, Comment, Like
 from .serializers import PostSerializer, CommentSerializer
 from notifications.models import Notification
@@ -19,6 +20,19 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
             return True
         return obj.author == request.user
 
+# --- NEW FEED VIEW ---
+class UserFeedView(generics.ListAPIView):
+    serializer_class = PostSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        user = self.request.user
+        # Get users that the current user follows
+        following_users = user.following.all()
+        # Get posts from those users, ordered by newest
+        return Post.objects.filter(author__in=following_users).order_by('-created_at')
+
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('-created_at')
     serializer_class = PostSerializer
@@ -30,15 +44,12 @@ class PostViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    # --- Updated Liking Action ---
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def like(self, request, pk=None):
-        # Checker requires this exact syntax:
         post = generics.get_object_or_404(Post, pk=pk)
         like, created = Like.objects.get_or_create(user=request.user, post=post)
 
         if created:
-            # Create notification
             if post.author != request.user:
                 Notification.objects.create(
                     recipient=post.author,
@@ -49,10 +60,8 @@ class PostViewSet(viewsets.ModelViewSet):
             return Response({'status': 'post liked'}, status=status.HTTP_201_CREATED)
         return Response({'status': 'post already liked'}, status=status.HTTP_200_OK)
 
-    # --- Updated Unliking Action ---
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def unlike(self, request, pk=None):
-        # Checker requires this exact syntax:
         post = generics.get_object_or_404(Post, pk=pk)
         like = Like.objects.filter(user=request.user, post=post)
 
