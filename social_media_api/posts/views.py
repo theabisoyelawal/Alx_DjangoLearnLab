@@ -1,43 +1,17 @@
-from rest_framework import viewsets, permissions
-from .models import Post, Comment
-from .serializers import PostSerializer, CommentSerializer
+from rest_framework import viewsets, permissions, filters, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
-from rest_framework import filters
+from django.contrib.contenttypes.models import ContentType
+from .models import Post, Comment, Like
+from .serializers import PostSerializer, CommentSerializer
+from notifications.models import Notification
 
+# Pagination configuration
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'page_size'
     max_page_size = 100
-
-class PostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all().order_by('-created_at')
-    serializer_class = PostSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    pagination_class = StandardResultsSetPagination
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['title', 'content']
-
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
-
-    def get_permissions(self):
-        if self.action in ['update', 'partial_update', 'destroy']:
-            return [permissions.IsAuthenticated(), IsAuthorOrReadOnly()]
-        return [permissions.IsAuthenticatedOrReadOnly()]
-
-class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all().order_by('-created_at')
-    serializer_class = CommentSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    pagination_class = StandardResultsSetPagination
-
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
-
-    def get_permissions(self):
-        if self.action in ['update', 'partial_update', 'destroy']:
-            return [permissions.IsAuthenticated(), IsAuthorOrReadOnly()]
-        return [permissions.IsAuthenticatedOrReadOnly()]
 
 # Custom permission to check if user is author
 class IsAuthorOrReadOnly(permissions.BasePermission):
@@ -45,3 +19,43 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         return obj.author == request.user
+
+class PostViewSet(viewsets.ModelViewSet):
+    queryset = Post.objects.all().order_by('-created_at')
+    serializer_class = PostSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title', 'content']
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+    # --- New Liking Action ---
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def like(self, request, pk=None):
+        post = self.get_object()
+        like, created = Like.objects.get_or_create(user=request.user, post=post)
+
+        if created:
+            # Create notification
+            if post.author != request.user:
+                Notification.objects.create(
+                    recipient=post.author,
+                    actor=request.user,
+                    verb='liked your post',
+                    target=post
+                )
+            return Response({'status': 'post liked'}, status=status.HTTP_201_CREATED)
+        else:
+            like.delete()
+            return Response({'status': 'post unliked'}, status=status.HTTP_200_OK)
+
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all().order_by('-created_at')
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+    pagination_class = StandardResultsSetPagination
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
