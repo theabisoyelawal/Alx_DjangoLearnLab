@@ -1,31 +1,44 @@
-from rest_framework import generics, status, permissions
+from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import CustomUser
+from rest_framework import status
+from .serializers import RegisterSerializer, LoginSerializer
+from rest_framework.permissions import AllowAny
 
+# -------------------------
+# Registration View
+# -------------------------
+class RegisterView(APIView):
+    permission_classes = [AllowAny]
 
-class FollowUserView(generics.GenericAPIView):
-    permission_classes = [permissions.IsAuthenticated]
-    queryset = CustomUser.objects.all()
+    def post(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response({
+                "message": "User registered successfully",
+                "username": user.username,
+                "token": user.auth_token.key
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def post(self, request, user_id):
-        try:
-            user_to_follow = CustomUser.objects.get(id=user_id)
-        except CustomUser.DoesNotExist:
-            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+# -------------------------
+# Login View
+# -------------------------
+class LoginView(APIView):
+    permission_classes = [AllowAny]
 
-        request.user.following.add(user_to_follow)
-        return Response({"detail": "User followed successfully."}, status=status.HTTP_200_OK)
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            return Response(serializer.validated_data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+from rest_framework.permissions import IsAuthenticated
+from .serializers import ProfileSerializer
 
-class UnfollowUserView(generics.GenericAPIView):
-    permission_classes = [permissions.IsAuthenticated]
-    queryset = CustomUser.objects.all()
+class ProfileView(APIView):
+    permission_classes = [IsAuthenticated]
 
-    def post(self, request, user_id):
-        try:
-            user_to_unfollow = CustomUser.objects.get(id=user_id)
-        except CustomUser.DoesNotExist:
-            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
-
-        request.user.following.remove(user_to_unfollow)
-        return Response({"detail": "User unfollowed successfully."}, status=status.HTTP_200_OK)
+    def get(self, request):
+        serializer = ProfileSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
